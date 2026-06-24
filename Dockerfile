@@ -15,9 +15,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# 🚨 ĐOẠN SỬA LỖI: Hạ chuẩn mã hóa OpenSSL để sửa lỗi Pre-login Handshake
+# 🚨 CẤU HÌNH ĐẶC TRỊ: Hạ toàn bộ tiêu chuẩn bảo mật hệ thống xuống mức thấp nhất
 RUN sed -i 's/MinProtocol = TLSv1.2/MinProtocol = TLSv1.0/g' /etc/ssl/openssl.cnf
 RUN sed -i 's/CipherString = DEFAULT@SECLEVEL=2/CipherString = DEFAULT@SECLEVEL=1/g' /etc/ssl/openssl.cnf
+
+# Ép hệ điều hành chấp nhận các mật mã mã hóa cũ của SQL Server
+ENV OPENSSL_CONF=/etc/ssl/openssl.cnf
 
 # Mở cổng mặc định của Render
 EXPOSE 8080
