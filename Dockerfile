@@ -1,4 +1,4 @@
-# Bước 1: Biên dịch code (Giữ nguyên)
+# Bước 1: Biên dịch code
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["QLBanHangAPI.csproj", "./"]
@@ -11,8 +11,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# 🚨 ĐẶC TRỊ: Ghi đè file cấu hình OpenSSL của Linux để chấp nhận kết nối cũ
-RUN echo "[openssl_init]\nproviders = provider_sect\nssl_conf = ssl_sect\n\n[provider_sect]\ndefault = default_sect\n\n[default_sect]\nactivate = 1\n\n[ssl_sect]\nsystem_default = system_default_sect\n\n[system_default_sect]\nMinProtocol = TLSv1\nCipherString = DEFAULT@SECLEVEL=0" > /etc/ssl/openssl.cnf
+# 🚨 ĐẶC TRỊ: Sử dụng printf để ghi chính xác file cấu hình OpenSSL xuống dòng
+RUN printf "[openssl_init]\nproviders = provider_sect\nssl_conf = ssl_sect\n\n[provider_sect]\ndefault = default_sect\n\n[default_sect]\nactivate = 1\n\n[ssl_sect]\nsystem_default = system_default_sect\n\n[system_default_sect]\nMinProtocol = TLSv1\nCipherString = DEFAULT@SECLEVEL=0\n" > /etc/ssl/openssl.cnf
 
 # Thiết lập cổng chạy cho Render
 EXPOSE 8080
