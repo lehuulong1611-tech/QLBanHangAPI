@@ -18,7 +18,7 @@ builder.Services.AddControllers()
     );
 
 // Lấy chuỗi kết nối CHBANH từ file appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("CHBANH2026");
+var connectionString = builder.Configuration.GetConnectionString("CHBANH");
 
 // Đăng ký CHBANHDbContext vào hệ thống để các Controller sau này gọi sử dụng
 
