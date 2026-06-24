@@ -1,28 +1,20 @@
-# Bước 1: Dùng bản SDK của Microsoft để biên dịch code
+# Bước 1: Biên dịch code (Giữ nguyên)
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
-# Copy file project và khôi phục thư viện
 COPY ["QLBanHangAPI.csproj", "./"]
 RUN dotnet restore "./QLBanHangAPI.csproj"
-
-# Copy toàn bộ code và publish
 COPY . .
 RUN dotnet publish "QLBanHangAPI.csproj" -c Release -o /app/publish
 
-# Bước 2: Dùng bản Runtime siêu nhẹ để chạy API
+# Bước 2: Chạy API với cấu hình hạ chuẩn bảo mật hệ điều hành Linux
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# 🚨 CẤU HÌNH ĐẶC TRỊ: Hạ toàn bộ tiêu chuẩn bảo mật hệ thống xuống mức thấp nhất
-RUN sed -i 's/MinProtocol = TLSv1.2/MinProtocol = TLSv1.0/g' /etc/ssl/openssl.cnf
-RUN sed -i 's/CipherString = DEFAULT@SECLEVEL=2/CipherString = DEFAULT@SECLEVEL=1/g' /etc/ssl/openssl.cnf
+# 🚨 ĐẶC TRỊ: Ghi đè file cấu hình OpenSSL của Linux để chấp nhận kết nối cũ
+RUN echo "[openssl_init]\nproviders = provider_sect\nssl_conf = ssl_sect\n\n[provider_sect]\ndefault = default_sect\n\n[default_sect]\nactivate = 1\n\n[ssl_sect]\nsystem_default = system_default_sect\n\n[system_default_sect]\nMinProtocol = TLSv1\nCipherString = DEFAULT@SECLEVEL=0" > /etc/ssl/openssl.cnf
 
-# Ép hệ điều hành chấp nhận các mật mã mã hóa cũ của SQL Server
-ENV OPENSSL_CONF=/etc/ssl/openssl.cnf
-
-# Mở cổng mặc định của Render
+# Thiết lập cổng chạy cho Render
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
