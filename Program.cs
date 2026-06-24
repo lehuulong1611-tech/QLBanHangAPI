@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QLBanHangAPI.Models;
 using QLBanHangAPI.Data;
+System.AppContext.SetSwitch("Microsoft.Data.SqlClient.DisableStrictTokenValidation", true);
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
