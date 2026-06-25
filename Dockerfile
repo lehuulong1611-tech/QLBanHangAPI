@@ -1,13 +1,13 @@
-# Bước 1: Biên dịch code dùng SDK 8.0 buster (Linux cũ hơn)
-FROM mcr.microsoft.com/dotnet/sdk:8.0-buster-slim AS build
+# Bước 1: Biên dịch code (Dùng bản chuẩn 8.0)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["QLBanHangAPI.csproj", "./"]
 RUN dotnet restore "./QLBanHangAPI.csproj"
 COPY . .
 RUN dotnet publish "QLBanHangAPI.csproj" -c Release -o /app/publish
 
-# Bước 2: Chạy API dùng Runtime buster để hạ chuẩn bảo mật OpenSSL hệ thống xuống
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-buster-slim AS final
+# Bước 2: Chạy API với Runtime chuẩn
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
