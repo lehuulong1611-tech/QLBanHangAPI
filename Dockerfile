@@ -1,21 +1,22 @@
-# Bước 1: Biên dịch code dùng SDK bản Alpine
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+# Bước 1: Biên dịch code C#
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["QLBanHangAPI.csproj", "./"]
 RUN dotnet restore "./QLBanHangAPI.csproj"
 COPY . .
 RUN dotnet publish "QLBanHangAPI.csproj" -c Release -o /app/publish
 
-# Bước 2: Chạy bằng Runtime Alpine để tự động bỏ qua bộ lọc bảo mật SSL khắt khe
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+# Bước 2: Môi trường chạy chuẩn, cài thêm Node.js để chạy file proxy
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY proxy.js .
 
-# Cài đặt thêm thư viện hỗ trợ ngôn ngữ toàn cầu cho bản Alpine
-RUN apk add --no-cache icu-libs
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+# Cài Node.js siêu tốc vào môi trường chạy
+RUN apt-get update && apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-ENTRYPOINT ["dotnet", "QLBanHangAPI.dll"]
+# Lệnh khởi chạy: Bật proxy ngầm trước, sau đó bật API C#
+ENTRYPOINT node proxy.js & dotnet QLBanHangAPI.dll
