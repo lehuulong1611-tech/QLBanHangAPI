@@ -1,18 +1,15 @@
-# Bước 1: Biên dịch code
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Bước 1: Biên dịch code dùng SDK 8.0 buster (Linux cũ hơn)
+FROM mcr.microsoft.com/dotnet/sdk:8.0-buster-slim AS build
 WORKDIR /src
 COPY ["QLBanHangAPI.csproj", "./"]
 RUN dotnet restore "./QLBanHangAPI.csproj"
 COPY . .
 RUN dotnet publish "QLBanHangAPI.csproj" -c Release -o /app/publish
 
-# Bước 2: Chạy API với cấu hình hạ chuẩn bảo mật hệ điều hành Linux
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Bước 2: Chạy API dùng Runtime buster để hạ chuẩn bảo mật OpenSSL hệ thống xuống
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-buster-slim AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-
-# 🚨 ĐẶC TRỊ: Sử dụng printf để ghi chính xác file cấu hình OpenSSL xuống dòng
-RUN printf "[openssl_init]\nproviders = provider_sect\nssl_conf = ssl_sect\n\n[provider_sect]\ndefault = default_sect\n\n[default_sect]\nactivate = 1\n\n[ssl_sect]\nsystem_default = system_default_sect\n\n[system_default_sect]\nMinProtocol = TLSv1\nCipherString = DEFAULT@SECLEVEL=0\n" > /etc/ssl/openssl.cnf
 
 # Thiết lập cổng chạy cho Render
 EXPOSE 8080
